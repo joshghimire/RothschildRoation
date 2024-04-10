@@ -1,0 +1,51 @@
+[submodule "fieldtrip"]
+	path = fieldtrip
+	url = https://github.com/fieldtrip/fieldtrip.git
+[submodule "ShadedErrorBar"]
+	path = ShadedErrorBar
+	url = https://github.com/raacampbell/shadedErrorBar.git
+[submodule "BuzCode"]
+	path = buzcode
+	url = https://github.com/buzsakilab/buzcode.git
+[submodule "Phy"]
+	path = phy
+	url = https://github.com/cortex-lab/phy.git
+[submodule "Kilosort"]
+	path = Kilosort
+	url = https://github.com/MouseLand/Kilosort.git
+[submodule "open-ephys"]
+	path = open-ephys
+	url = https://github.com/open-ephys/analysis-tools.git
+[submodule "ndmanager-plugins"]
+	path = ndmanager-plugins
+	url = https://github.com/neurosuite/ndmanager-plugins.git
+[submodule "matlab-schemer"]
+	path = matlab-schemer
+	url = https://github.com/scottclowe/matlab-schemer.git
+[submodule "readfile"]
+	path = readfile
+	url = https://github.com/thrynae/readfile.git
+[submodule "NPMK"]
+	path = NPMK
+	url = https://github.com/BlackrockMicrosystems/NPMK.git
+[submodule "fooof_mat"]
+	path = fooof_mat
+	url = https://github.com/fooof-tools/fooof_mat.git
+[submodule "mat_py_mat"]
+	path = mat_py_mat
+	url = https://github.com/fooof-tools/mat_py_mat.git
+[submodule "pmtk3"]
+	path = pmtk3
+	url = https://github.com/probml/pmtk3.git
+[submodule "npy-matlab"]
+	path = npy-matlab
+	url = https://github.com/kwikteam/npy-matlab.git
+[submodule "EgocentricBoundaryCells"]
+	path = EgocentricBoundaryCells
+	url = https://github.com/hasselmonians/EgocentricBoundaryCells.git
+[submodule "Violinplot-Matlab"]
+	path = Violinplot-Matlab
+	url = https://github.com/bastibe/Violinplot-Matlab.git
+[submodule "open-ephys-matlab-tools"]
+	path = open-ephys-matlab-tools
+	url = https://github.com/open-ephys/open-ephys-matlab-tools.git
