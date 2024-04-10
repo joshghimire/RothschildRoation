@@ -1,4 +1,5 @@
-cd R:\DataBackup\RothschildLab\utku\Josh
+addpath('R:\DataBackup\RothschildLab\utku\Josh')
+addpath(genpath('C:\Users\gidlab-admin\Documents')) % Add folder and subfolders to Matlab Search Path
 load('PositionTable.mat')
 pt = ratontrack.PositionTable;
 nodes=unique(pt.Node);
@@ -65,7 +66,7 @@ end
 
 
 %% Tryin to plot theta angle as well
-cd 'C:\Users\gidlab-admin\Documents\Josh';
+addpath 'C:\Users\gidlab-admin\Documents\Josh';
 videoFile = 'Basler_acA4024-29um__24844056__20240125_130929331_RUN.mp4';
 v = VideoReader(videoFile);
 sleapDownSampling = 2.5; % videos fed into SLEAP are downsampled from 2500x2500 to 1000x1000
@@ -155,13 +156,22 @@ videoTimeBinFrames = videoTimeBinSize * videoFrameRate;
 
 
 for i = 2:(v.NumFrames/videoTimeBinFrames)
-    angularVelDegPerFrame(i) = (angleDegrees(videoFrameRate * i) - angleDegrees(videoFrameRate * i-1))/videoFrameRate;  % How much does the angle (which angle is best to look at? Angle Radians?) change per bin size?
-    angularVelDegPerFrame = angularVelDegPerFrame'; % Stopped here. This calc was wrong for some reason. 
-    angularVelDegPerSec(i) = angularVelDegPerFrame(i) * 
-    %angularVelSec(i)
+    angularVelDegPerFrame(i) = (angleDegrees(videoFrameRate * i) - angleDegrees(videoFrameRate * i-1))/videoFrameRate;  % How much does the angle in degrees change per frame bin size?
+    angularVelDegPerFrame = angularVelDegPerFrame';  
+    angularVelDegPerSec(i) = angularVelDegPerFrame(i) * (videoFrameRate); % How much does the angle in degrees change per second?
+    angularVelDegPerSec = angularVelDegPerSec';
 end
 
-
+%% plot angular velocity
+%scatter([1:length(angularVelDegPerSec)], angularVelDegPerSec)
+figure
+plot(abs(angularVelDegPerSec))
+title('Angular Velocity vs. Time')
+ylim([-8 8])
+xlim([1 length(angularVelDegPerSec)])
+xlabel(sprintf('Time (bin size %d seconds)', videoTimeBinSize))
+ylabel('Velocity (delta angle / 25 frames)')
+%%
 % Find Frames at Reward Well
 rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.                             
 rewardWellHigherAngle = 143;
@@ -173,7 +183,6 @@ framesAtRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < r
 
 % For the number of frames at the rewatd well
 % take the frame number of the ith frame
-%%
 changePtsFramesAtRewardWell = findchangepts(framesAtRewardWell,'Statistic', 'linear', 'MinThreshold', 10000); 
 % Gives the index of the frames at which a change in signal finishes.
 %   For ex, if you have a vector 680; 681; 1337; 1338,

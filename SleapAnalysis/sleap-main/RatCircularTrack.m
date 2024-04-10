@@ -213,6 +213,12 @@ classdef RatCircularTrack < SleapHDF5Loader
                 "filled", MarkerEdgeAlpha=.2,MarkerFaceAlpha=.2)
         end
         % Example method to calculate center of circular track
+        function obj = plotAngularVelocity(obj) % Josh plotting velocity plot
+            ax=gca;
+            pbaspect([20 1 1])
+            hold on
+            
+        end
         function obj = setCenter(obj,center)
             obj.Center=center;
         end

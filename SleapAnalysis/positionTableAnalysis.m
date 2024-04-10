@@ -1,4 +1,5 @@
-cd R:\DataBackup\RothschildLab\utku\Josh
+addpath('R:\DataBackup\RothschildLab\utku\Josh')
+addpath(genpath('C:\Users\gidlab-admin\Documents')) % Add folder and subfolders to Matlab Search Path
 load('PositionTable.mat')
 pt = ratontrack.PositionTable;
 nodes=unique(pt.Node);
@@ -65,7 +66,7 @@ end
 
 
 %% Tryin to plot theta angle as well
-cd 'C:\Users\gidlab-admin\Documents\Josh';
+addpath 'C:\Users\gidlab-admin\Documents\Josh';
 videoFile = 'Basler_acA4024-29um__24844056__20240125_130929331_RUN.mp4';
 v = VideoReader(videoFile);
 sleapDownSampling = 2.5; % videos fed into SLEAP are downsampled from 2500x2500 to 1000x1000
@@ -161,7 +162,53 @@ for i = 2:(v.NumFrames/videoTimeBinFrames)
     angularVelDegPerSec = angularVelDegPerSec';
 end
 
+normalizedAngularVelDegPerSec = normalize(angularVelDegPerSec, 'range');
+%% plot angular velocity
+%%% Works!
+figure
+plot(angularVelDegPerSec)  % plot absolute value of angular velocity, encode negative val via color next time
+title('Angular Velocity vs. Time')
+ylim([0 8])
+xlim([1 length(angularVelDegPerSec)])
+xlabel(sprintf('Time (bin size %d seconds)', videoTimeBinSize))
+ylabel('Velocity (delta angle / 25 frames)')
+%% Try to plot normalized angular velocity
+% Looks bizarre.
+figure
+plot(normalizedAngularVelDegPerSec)  % plot absolute value of angular velocity, encode negative val via color next time
+title('Angular Velocity vs. Time')
+ylim([0 .5])
+xlim([1 length(angularVelDegPerSec)])
+xlabel(sprintf('Time (bin size %d seconds)', videoTimeBinSize))
+ylabel('Velocity (delta angle / 25 frames)')
 
+%% Plotting normalized angular velocity
+% Actually try to plot with normalized angular velocity. 
+% Doesn't work because hsvColor(colorIndices) can't work with negative
+% numbers. Normalizig AngularVelDegPerSec with 'range' gives me an unclear
+% plot
+
+% Generate HSV colormap
+numColors = 256;
+hsvColors = hsv(numColors);
+
+% Map normalized velocity to the color map
+% Ensure the indices are within the valid range of the colormap
+colorIndices = ceil(normalizedAngularVelDegPerSec * (numColors - 1)) + 1;
+colorIndices(isnan(colorIndices))=1;
+colorVector = hsvColors(colorIndices, :);
+
+xAxis = 1:length(angularVelDegPerSec);
+figure
+scatter(xAxis, normalizedAngularVelDegPerSec, ones(size(xAxis))*5,colorVector, ...
+    "filled", MarkerEdgeAlpha=.2,MarkerFaceAlpha=1)  % plot absolute value of angular velocity, encode negative val via color next time
+title('Normalized Angular Velocity vs. Time')
+ylim([0 0.5])
+xlim([1 length(angularVelDegPerSec)])
+xlabel(sprintf('Time (bin size %d seconds)', videoTimeBinSize))
+ylabel('Normalized Velocity (delta angle / 25 frames)')
+
+%%
 % Find Frames at Reward Well
 rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.                             
 rewardWellHigherAngle = 143;
@@ -173,7 +220,6 @@ framesAtRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < r
 
 % For the number of frames at the rewatd well
 % take the frame number of the ith frame
-%%
 changePtsFramesAtRewardWell = findchangepts(framesAtRewardWell,'Statistic', 'linear', 'MinThreshold', 10000); 
 % Gives the index of the frames at which a change in signal finishes.
 %   For ex, if you have a vector 680; 681; 1337; 1338,
