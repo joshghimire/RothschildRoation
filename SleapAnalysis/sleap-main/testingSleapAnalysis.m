@@ -5,7 +5,7 @@ for ifile=1:numel(files)
     filepath=fullfile(folder,filename1);
     ratontrack = RatCircularTrack(filepath);
     ratontrack=ratontrack.setCenter([550 500]);
-    ff=logistics.FigureFactory.instance(folder);ff.ext={'.png'};ff.resolution=600;
+   % ff=logistics.FigureFactory.instance(folder);ff.ext={'.png'};ff.resolution=600;
     figure(1);clf
     % ratontrack1=ratontrack.getHeadPosition
     ax=gca;
@@ -13,7 +13,7 @@ for ifile=1:numel(files)
     ax.XDir="reverse";
     ratontrack.plotRawTime;
     view(90,-60)
-    ff.save(strcat(filename1,'_raw.png'))
+   % ff.save(strcat(filename1,'_raw.png'))
     figure(2);clf; tiledlayout("vertical","TileSpacing","none");t1=nexttile;
     ratontrack.plotRawTime;
     view(-30,0)
@@ -23,8 +23,11 @@ for ifile=1:numel(files)
     ratontrack.plotHeadDirectionColor;
     t4=nexttile;
     ratontrack.plotHeadDirection;
-    linkaxes([t1 t2 t3 t4],'x')
-    ff.save(strcat(filename1,'_angle+direction.png'))
+    t5=nexttile;
+    ratontrack.plotAngularVelocity;
+    linkaxes([t1 t2 t3 t4 t5],'x')
+   % ff.save(strcat(filename1,'_angle+direction.png'))
+    
 end
 % head=ratontrack.getHeadPosition;
 % 

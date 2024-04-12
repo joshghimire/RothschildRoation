@@ -213,6 +213,44 @@ classdef RatCircularTrack < SleapHDF5Loader
                 "filled", MarkerEdgeAlpha=.2,MarkerFaceAlpha=.2)
         end
         % Example method to calculate center of circular track
+        function obj = plotAngularVelocity(obj) % Josh plotting velocity plo
+            pt = obj.PositionTable;
+            nodes=unique(pt.Node);
+            for inode=1:numel(nodes)
+                pt1=pt(pt.Node==inode,:);
+                x1=pt1.XCoordinate;
+                y1=pt1.YCoordinate;
+
+                % pt2=pt(pt.Node==2,:);   % hardcoded for now
+                % x2=pt2.XCoordinate;   % hardcoded
+                % y2=pt2.YCoordinate;   % hardcoded
+
+                % Adjust coordinates to be relative to the center
+                x_relative = x1 - obj.Center(1);
+                y_relative = y1 - obj.Center(2);
+
+                % Calculate the angle in radians
+                angleRadians = -atan2(y_relative, x_relative);
+                % Convert the angle to degrees
+                angleDegrees = rad2deg(angleRadians);
+                filledNanAngleDegrees = fillmissing(angleDegrees,'linear');
+                smoothAngleDegrees = medfilt1(filledNanAngleDegrees, 10);
+                % Adjust angles to be within the range [0, 360) if necessary
+                % angleDegrees = mod(angleDegrees, 360)
+                angleDeg = diff(smoothAngleDegrees)/.04;
+                %plot(angleDeg)
+                angleDeg1 = medfilt1(angleDeg, 10, 'omitnan');
+                angleDeg1 = smoothdata(angleDeg1, 'gaussian', 25);
+                angleDeg1(abs(zscore(angleDeg1))>4)=nan;
+                hold on
+                plot((angleDeg1))
+                ax=gca;
+                ax.YGrid="on"
+            end
+
+
+            
+        end
         function obj = setCenter(obj,center)
             obj.Center=center;
         end
@@ -230,22 +268,22 @@ classdef RatCircularTrack < SleapHDF5Loader
             obj.Radius = 0; % This would be replaced with actual calculations
         end
 
-
-        function obj = viewShoddyVideo(obj)
         % Override or add new methods here for specific RatCircularTrack functionality
+        function obj = viewShoddyVideo(obj)
+        
         %% Tryin to plot theta angle as well
         cd R:\DataBackup\RothschildLab\utku\Josh
         load('PositionTable.mat')
         pt = ratontrack.PositionTable;
         nodes=unique(pt.Node);
-        for inode=1:numel(nodes)
+        for inode=1:1
             pt1=pt(pt.Node==inode,:);
             x1=pt1.XCoordinate;
             y1=pt1.YCoordinate;
         
-            % pt2=pt(pt.Node==2,:);   % hardcoded for now
-            % x2=pt2.XCoordinate;   % hardcoded
-            % y2=pt2.YCoordinate;   % hardcoded
+            pt2=pt(pt.Node==2,:);   % hardcoded for now
+            x2=pt2.XCoordinate;   % hardcoded
+            y2=pt2.YCoordinate;   % hardcoded
             
             % Adjust coordinates to be relative to the center
             x_relative = x1 - ratontrack.Center(1);
@@ -257,9 +295,9 @@ classdef RatCircularTrack < SleapHDF5Loader
             angleDegrees = rad2deg(angleRadians);
             % Adjust angles to be within the range [0, 360) if necessary
             % angleDegrees = mod(angleDegrees, 360);
-            time1=pt1.Frame/fr/60;
-            scatter(time1,angleDegrees,size1(inode),color1(inode,:), ...
-                "filled", MarkerEdgeAlpha=alpha(inode),MarkerFaceAlpha=alpha(inode))
+            %time1=pt1.Frame/fr/60;
+            %scatter(time1,angleDegrees,size1(inode),color1(inode,:), ...
+                %"filled", MarkerEdgeAlpha=alpha(inode),MarkerFaceAlpha=alpha(inode))
         end
         cd 'C:\Users\gidlab-admin\Documents\Josh';
         videoFile = 'Basler_acA4024-29um__24844056__20240125_130929331_RUN.mp4';
@@ -274,7 +312,7 @@ classdef RatCircularTrack < SleapHDF5Loader
         
         centerX = v.Width / 2;
         centerY = v.Height / 2;
-        
+
         figure
         i = 1;
         while hasFrame(v)
@@ -293,7 +331,6 @@ classdef RatCircularTrack < SleapHDF5Loader
         
            % Plot the line
            plot([centerX, xEnd], [centerY, yEnd], 'b', 'LineWidth', 2);
-        
            scatter(xPositions1(i), yPositions1(i), 'r')
            %scatter(xPositions2(i), yPositions2(i), 'b')
            %1plot(angleDegrees(i))
