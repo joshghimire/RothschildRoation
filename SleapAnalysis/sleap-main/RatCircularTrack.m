@@ -312,9 +312,13 @@ classdef RatCircularTrack < SleapHDF5Loader
 
             centerX = v.Width / 2;
             centerY = v.Height / 2;
-
+            videoStartTimeInMinutes = input("Video start frame in whole minutes: ");
+            startFrame = videoStartTimeInMinutes * 60;  % To use v.CurrentTime (which is timestamp in seconds from video start, need to convert)
+                
+            v.CurrentTime = startFrame;
+            
             figure
-            i = 1;
+            i = v.CurrentTime * v.FrameRate;
             while hasFrame(v)
                 img = readFrame(v);
                 %angleRadians = insertMarker(img, ratontrack.Center);

@@ -6,10 +6,10 @@
 % Probably yes.
 
 % I guess pt=obj.PositionTable aka pt below might be a good place to start with
-% plotting? 
-% 
+% plotting?
+%
 
-classdef RatCircularTrack < SleapHDF5Loader 
+classdef RatCircularTrack < SleapHDF5Loader
     properties
         % Add properties specific to RatCircularTrack analysis here
         PositionTable
@@ -23,7 +23,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             % Call superclass constructor
             obj@SleapHDF5Loader(filePath);
             % Initialization code specific to RatCircularTrack
-                        % Preallocate table
+            % Preallocate table
             numFrames = size(obj.Tracks, 1);
             numNodes = size(obj.Tracks, 2);
 
@@ -215,41 +215,41 @@ classdef RatCircularTrack < SleapHDF5Loader
         % Example method to calculate center of circular track
         function obj = plotAngularVelocity(obj) % Josh plotting velocity plo
             pt = obj.PositionTable;
-            nodes=unique(pt.Node);
-            for inode=1:numel(nodes)
-                pt1=pt(pt.Node==inode,:);
-                x1=pt1.XCoordinate;
-                y1=pt1.YCoordinate;
+            fr=25;
+            pt1=pt(pt.Node==1,:);
+            x1=pt1.XCoordinate;
+            y1=pt1.YCoordinate;
+            pt2=pt(pt.Node==2,:);
+            x2=pt2.XCoordinate;
+            y2=pt2.YCoordinate;
+            % Step 1: Calculate the midpoint M
+            mx = (x1 + x2) / 2;
+            my = (y1 + y2) / 2;
+            % Adjust coordinates to be relative to the center
+            x_relative = mx - obj.Center(1);
+            y_relative = my - obj.Center(2);
 
-                % pt2=pt(pt.Node==2,:);   % hardcoded for now
-                % x2=pt2.XCoordinate;   % hardcoded
-                % y2=pt2.YCoordinate;   % hardcoded
+            % Calculate the angle in radians
+            angleRadians = -atan2(y_relative, x_relative);
+            % Convert the angle to degrees
+            angleDegrees = rad2deg(angleRadians);
+            filledNanAngleDegrees = fillmissing(angleDegrees,'linear');
+            smoothAngleDegrees = medfilt1(filledNanAngleDegrees, 10);
+            % Adjust angles to be within the range [0, 360) if necessary
+            % angleDegrees = mod(angleDegrees, 360)
+            angleDeg = [diff(smoothAngleDegrees)/.04 ; 0];
+            %plot(angleDeg)
+            angleDeg1 = medfilt1(angleDeg, 10, 'omitnan');
+            angleDeg1 = smoothdata(angleDeg1, 'gaussian', 25);
+            angleDeg1(abs(zscore(angleDeg1))>4)=nan;
+            hold on
+            time1=pt1.Frame/fr/60;
 
-                % Adjust coordinates to be relative to the center
-                x_relative = x1 - obj.Center(1);
-                y_relative = y1 - obj.Center(2);
-
-                % Calculate the angle in radians
-                angleRadians = -atan2(y_relative, x_relative);
-                % Convert the angle to degrees
-                angleDegrees = rad2deg(angleRadians);
-                filledNanAngleDegrees = fillmissing(angleDegrees,'linear');
-                smoothAngleDegrees = medfilt1(filledNanAngleDegrees, 10);
-                % Adjust angles to be within the range [0, 360) if necessary
-                % angleDegrees = mod(angleDegrees, 360)
-                angleDeg = diff(smoothAngleDegrees)/.04;
-                %plot(angleDeg)
-                angleDeg1 = medfilt1(angleDeg, 10, 'omitnan');
-                angleDeg1 = smoothdata(angleDeg1, 'gaussian', 25);
-                angleDeg1(abs(zscore(angleDeg1))>4)=nan;
-                hold on
-                plot((angleDeg1))
-                ax=gca;
-                ax.YGrid="on"
-            end
+            plot(time1, angleDeg1)
+            ax=gca;
+            ax.YGrid="on";
 
 
-            
         end
         function obj = setCenter(obj,center)
             obj.Center=center;
@@ -270,73 +270,77 @@ classdef RatCircularTrack < SleapHDF5Loader
 
         % Override or add new methods here for specific RatCircularTrack functionality
         function obj = viewShoddyVideo(obj)
-        
-        %% Tryin to plot theta angle as well
-        cd R:\DataBackup\RothschildLab\utku\Josh
-        load('PositionTable.mat')
-        pt = ratontrack.PositionTable;
-        nodes=unique(pt.Node);
-        for inode=1:1
-            pt1=pt(pt.Node==inode,:);
-            x1=pt1.XCoordinate;
-            y1=pt1.YCoordinate;
-        
-            pt2=pt(pt.Node==2,:);   % hardcoded for now
-            x2=pt2.XCoordinate;   % hardcoded
-            y2=pt2.YCoordinate;   % hardcoded
-            
-            % Adjust coordinates to be relative to the center
-            x_relative = x1 - ratontrack.Center(1);
-            y_relative = y1 - ratontrack.Center(2);
-        
-            % Calculate the angle in radians
-            angleRadians = -atan2(y_relative, x_relative);
-            % Convert the angle to degrees
-            angleDegrees = rad2deg(angleRadians);
-            % Adjust angles to be within the range [0, 360) if necessary
-            % angleDegrees = mod(angleDegrees, 360);
-            %time1=pt1.Frame/fr/60;
-            %scatter(time1,angleDegrees,size1(inode),color1(inode,:), ...
-                %"filled", MarkerEdgeAlpha=alpha(inode),MarkerFaceAlpha=alpha(inode))
-        end
-        cd 'C:\Users\gidlab-admin\Documents\Josh';
-        videoFile = 'Basler_acA4024-29um__24844056__20240125_130929331_RUN.mp4';
-        v = VideoReader(videoFile);
-        sleapDownSampling = 2.5; % videos fed into SLEAP are downsampled from 2500x2500 to 1000x1000
-        
-        xPositions1 = x1 * sleapDownSampling; 
-        yPositions1 = y1 * sleapDownSampling;
-        
-        % xPositions2 = x2 * sleapDownSampling; 
-        % yPositions2 = y2 * sleapDownSampling;
-        
-        centerX = v.Width / 2;
-        centerY = v.Height / 2;
 
-        figure
-        i = 1;
-        while hasFrame(v)
-           img = readFrame(v);
-           %angleRadians = insertMarker(img, ratontrack.Center);
-           imshow(img);
-           hold on
-        
-           % Calculate the endpoint coordinates based on the angle
-           angle = angleRadians(i); % Replace angles(i) with your angle data
-           lineLength = 1000; % Define the length of the line
-        
-           % Calculate endpoint coordinates
-           xEnd = centerX + lineLength * cos(angle);
-           yEnd = centerY - lineLength * sin(angle);
-        
-           % Plot the line
-           plot([centerX, xEnd], [centerY, yEnd], 'b', 'LineWidth', 2);
-           scatter(xPositions1(i), yPositions1(i), 'r')
-           %scatter(xPositions2(i), yPositions2(i), 'b')
-           %1plot(angleDegrees(i))
-           hold off
-           i = i+1;
-        end
+            %% Tryin to plot theta angle as well
+            cd R:\DataBackup\RothschildLab\utku\Josh
+            load('PositionTable.mat')
+            pt = ratontrack.PositionTable;
+            nodes=unique(pt.Node);
+            for inode=1:1
+                pt1=pt(pt.Node==inode,:);
+                x1=pt1.XCoordinate;
+                y1=pt1.YCoordinate;
+
+                pt2=pt(pt.Node==2,:);   % hardcoded for now
+                x2=pt2.XCoordinate;   % hardcoded
+                y2=pt2.YCoordinate;   % hardcoded
+
+                % Adjust coordinates to be relative to the center
+                x_relative = x1 - ratontrack.Center(1);
+                y_relative = y1 - ratontrack.Center(2);
+
+                % Calculate the angle in radians
+                angleRadians = -atan2(y_relative, x_relative);
+                % Convert the angle to degrees
+                angleDegrees = rad2deg(angleRadians);
+                % Adjust angles to be within the range [0, 360) if necessary
+                % angleDegrees = mod(angleDegrees, 360);
+                %time1=pt1.Frame/fr/60;
+                %scatter(time1,angleDegrees,size1(inode),color1(inode,:), ...
+                %"filled", MarkerEdgeAlpha=alpha(inode),MarkerFaceAlpha=alpha(inode))
+            end
+            cd 'C:\Users\gidlab-admin\Documents\Josh';
+            videoFile = 'Basler_acA4024-29um__24844056__20240125_130929331_RUN.mp4';
+            v = VideoReader(videoFile);
+            sleapDownSampling = 2.5; % videos fed into SLEAP are downsampled from 2500x2500 to 1000x1000
+
+            xPositions1 = x1 * sleapDownSampling;
+            yPositions1 = y1 * sleapDownSampling;
+
+            % xPositions2 = x2 * sleapDownSampling;
+            % yPositions2 = y2 * sleapDownSampling;
+
+            centerX = v.Width / 2;
+            centerY = v.Height / 2;
+            videoStartTimeInMinutes = input("Video start frame in whole minutes: ");
+            startFrame = videoStartTimeInMinutes * 60 * v.FrameRate;  % To use v.CurrentTime (which is timestamp in seconds from video start, need to convert)
+                
+            %v.CurrentTime = (startFrameInMinutes * 60) * v.FrameRate;
+            v.CurrentTime = 165;
+            figure
+            i = 1;
+            while hasFrame(v)
+                img = readFrame(v);
+                %angleRadians = insertMarker(img, ratontrack.Center);
+                imshow(img);
+                hold on
+
+                % Calculate the endpoint coordinates based on the angle
+                angle = angleRadians(i); % Replace angles(i) with your angle data
+                lineLength = 1000; % Define the length of the line
+
+                % Calculate endpoint coordinates
+                xEnd = centerX + lineLength * cos(angle);
+                yEnd = centerY - lineLength * sin(angle);
+
+                % Plot the line
+                plot([centerX, xEnd], [centerY, yEnd], 'b', 'LineWidth', 2);
+                scatter(xPositions1(i), yPositions1(i), 'r')
+                %scatter(xPositions2(i), yPositions2(i), 'b')
+                %1plot(angleDegrees(i))
+                hold off
+                i = i+1;
+            end
         end
     end
 end
