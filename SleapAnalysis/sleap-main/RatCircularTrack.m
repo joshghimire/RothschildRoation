@@ -233,8 +233,8 @@ classdef RatCircularTrack < SleapHDF5Loader
             angleRadians = -atan2(y_relative, x_relative);
             % Convert the angle to degrees
             angleDegrees = rad2deg(angleRadians);
-            filledNanAngleDegrees = fillmissing(angleDegrees,'linear');
-            smoothAngleDegrees = medfilt1(filledNanAngleDegrees, 10);
+            filledNanAngleDegrees = fillmissing(angleDegrees,'linear'); % Fill missing data using linear interpolation
+            smoothAngleDegrees = medfilt1(filledNanAngleDegrees, 10);% Apply a 10th order 1 dimensional medial filter.
             % Adjust angles to be within the range [0, 360) if necessary
             % angleDegrees = mod(angleDegrees, 360)
             angleDeg = [diff(smoothAngleDegrees)/.04 ; 0];

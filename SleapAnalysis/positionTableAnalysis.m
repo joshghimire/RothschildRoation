@@ -258,14 +258,24 @@ framesAtRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < r
 
 % For the number of frames at the rewatd well
 % take the frame number of the ith frame
-changePtsFramesAtRewardWell = findchangepts(framesAtRewardWell,'Statistic', 'linear', 'MinThreshold', 10000); 
+changePtsFramesAtRewardWell = findchangepts(framesAtRewardWell,'Statistic', 'linear', 'MinThreshold', 10000);
+
 % Gives the index of the frames at which a change in signal finishes.
 %   For ex, if you have a vector 680; 681; 1337; 1338,
 %   This will give you 3 as the value, as the large change started at 681 or index
 %   2, but the change finished at 1337, or index 3.
 %   'Minsthreshold' Specify a minimum residual error improvement of 10k.
 
+for i = 1:length(changePtsFramesAtRewardWell)
+    framesLeavingRewardWell(i,1) = framesAtRewardWell(changePtsFramesAtRewardWell(i)-1);
+    %entryExitFrames(i,1) = framesLeavingRewardWell(i,1);
+end
 
+changePtsFramesAtRewardWell = [1; changePtsFramesAtRewardWell]; % Adding 1 to changePtsFramesAtRewardWell
 
-
-
+% calculate the frames where the animal enters the rewardWell area and
+% exits the reward well area.
+for i = 1:length(changePtsFramesAtRewardWell) - 1
+    rewardWellEntryExit(i, 1) = framesAtRewardWell(changePtsFramesAtRewardWell(i));
+    rewardWellEntryExit(i, 2) = framesLeavingRewardWell(i);
+end 
