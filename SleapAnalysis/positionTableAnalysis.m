@@ -276,6 +276,9 @@ changePtsFramesAtRewardWell = [1; changePtsFramesAtRewardWell]; % Adding 1 to ch
 % calculate the frames where the animal enters the rewardWell area and
 % exits the reward well area.
 for i = 1:length(changePtsFramesAtRewardWell) - 1
-    rewardWellEntryExit(i, 1) = framesAtRewardWell(changePtsFramesAtRewardWell(i));
-    rewardWellEntryExit(i, 2) = framesLeavingRewardWell(i);
+    rewardWellEntryExitFrames(i, 1) = framesAtRewardWell(changePtsFramesAtRewardWell(i));
+    rewardWellEntryExitFrames(i, 2) = framesLeavingRewardWell(i);
 end 
+
+rewardWellEntryExitSeconds = rewardWellEntryExit / v.FrameRate;
+rewardWellEntryExitMinutes = rewardWellEntryExitSeconds/ 60;

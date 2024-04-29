@@ -269,6 +269,10 @@ classdef RatCircularTrack < SleapHDF5Loader
         end
 
         % Override or add new methods here for specific RatCircularTrack functionality
+
+        function obj = modifyPlots(obj)
+        end
+
         function obj = viewShoddyVideo(obj)
 
             %% Tryin to plot theta angle as well
