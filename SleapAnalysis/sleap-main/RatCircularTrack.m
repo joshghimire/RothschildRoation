@@ -157,7 +157,28 @@ classdef RatCircularTrack < SleapHDF5Loader
             scatter(time1,angleDegrees,ones(size(time1))*5,colorVector, ...
                 "filled", MarkerEdgeAlpha=.2,MarkerFaceAlpha=.2)
         end
-        
+        function angleDegrees = getAngleDegrees(obj)
+             pt=obj.PositionTable;
+            fr=25;
+            pt1=pt(pt.Node==1,:);
+            x1=pt1.XCoordinate;
+            y1=pt1.YCoordinate;
+            pt2=pt(pt.Node==2,:);
+            x2=pt2.XCoordinate;
+            y2=pt2.YCoordinate;
+            % Step 1: Calculate the midpoint M
+            mx = (x1 + x2) / 2;
+            my = (y1 + y2) / 2;
+            % Adjust coordinates to be relative to the center
+            x_relative = mx - obj.Center(1);
+            y_relative = my - obj.Center(2);
+
+            % Calculate the angle in radians
+            angleRadians = -atan2(y_relative, x_relative);
+            % Convert the angle to degrees
+            angleDegrees = rad2deg(angleRadians);
+        end
+
         function headDirection = getHeadDirection(obj)
             % 4.30.24 Josh- Is headDirection aka angleBetweenVectors in plot HeadDirection the right measurement??
             pt=obj.PositionTable;
@@ -314,25 +335,29 @@ classdef RatCircularTrack < SleapHDF5Loader
         end
         
         function obj = plotNosepokesAtCorrectRewardWell(obj)
+            pt = obj.PositionTable;
+            fr=25;
+            pt1=pt(pt.Node==1,:);
             headDirection = obj.getHeadDirection;
+            angleDegrees = obj.getAngleDegrees;
 
 
             rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
             rewardWellHigherAngle = 143;
 
-            framesAtCorrectRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle);
+            framesAtCorrectRewardWell = angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle;
 
             % getting low angular velocity for when animal stops at reward well
-            angularVelocity = ratontrack.getAngularVelocity();
+            angularVelocity = obj.getAngularVelocity;
             %histogram(angularVelocity); angularVelocity cutoffs below made by looking
             %at historgram of velocity
             angularVelocityLow = (angularVelocity >= -3 & angularVelocity<=3);
 
             % Find when animal's head is facing towards the reward well.
-            headDirection = ratontrack.getHeadDirection();
+            headDirection = obj.getHeadDirection;
             %historgram(headDirection); headDirection cutoffs below made by looking at histogram
             %of head directions.
-            framesFacingAllWells = (vectorAngleDegrees >= 0 & vectorAngleDegrees <= 50);
+            framesFacingAllWells = (headDirection >= 0 & headDirection <= 50);
 
             % Combine framesAtCorrectRewardWell, angularVelocityLow, and
             % framesFacingAllWells to get the frames when the animal was facing the
@@ -340,14 +365,16 @@ classdef RatCircularTrack < SleapHDF5Loader
 
             % Does this filte out the incorrect nosepokes where the animal is running the the wrong direction?
             % I think yes, but need to doublecheck 5.1.24
-            nosepokeAtCorrectRewardWell = angularVelocityLow & framesAtRewardWell & framesAnglesPointingToAllWells;
+            nosepokeAtCorrectRewardWell = framesAtCorrectRewardWell & angularVelocityLow & framesFacingAllWells;
+            %smoothedNosepokeAtCorrectRewardWell = smooth(nosepokeAtCorrectRewardWell);
+            smoothedNosepokeAtCorrectRewardWell1 = smoothdata(nosepokeAtCorrectRewardWell, 'movmean', 25*2);
+            smoothedNosepokeAtCorrectRewardWell2 = (smoothedNosepokeAtCorrectRewardWell1(:) >= 0.2) == 1;
 
-
-            filteredNosepokeAtCorrectRewardWellFrames = find(nosepokeAtCorrectRewardWell == 1);
-            filteredNosepokeAtCorrectRewardWellMinutes = filteredNosepokeAtCorrectRewardWellFrames/v.FrameRate/60;
+            %filteredNosepokeAtCorrectRewardWellFrames = find(nosepokeAtCorrectRewardWell == 1);
+            %filteredNosepokeAtCorrectRewardWellMinutes = filteredNosepokeAtCorrectRewardWellFrames/25/60; %frame rate hardcoded for now
             hold on
             time1=pt1.Frame/fr/60;
-            plot(time1, filteredNosepokeAtCorrectRewardWellMinutes)
+            plot(time1, smoothedNosepokeAtCorrectRewardWell2)
             ax=gca;
             ax.YGrid="on";
         end

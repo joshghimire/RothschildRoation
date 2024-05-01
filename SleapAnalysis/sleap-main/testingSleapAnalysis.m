@@ -27,7 +27,9 @@ for ifile=1:numel(files)
     ratontrack.plotAngularVelocity;
     t6 = nexttile;
     ratontrack.plotNosepokesAtCorrectRewardWell;
-    linkaxes([t1 t2 t3 t4 t5],'x')
+    ylim([-0.5 1.5])
+    linkaxes([t1 t2 t3 t4 t5 t6],'x')
+    xlabel('time')
    % ff.save(strcat(filename1,'_angle+direction.png'))
    % xregion(rewardWellEntryExitMinutes(:, 1)', rewardWellEntryExitMinutes(:,2)'); % I think This is the right way to use X region with vectors. 
 end
