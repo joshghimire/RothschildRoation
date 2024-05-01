@@ -157,7 +157,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             scatter(time1,angleDegrees,ones(size(time1))*5,colorVector, ...
                 "filled", MarkerEdgeAlpha=.2,MarkerFaceAlpha=.2)
         end
-
+        
         function headDirection = getHeadDirection(obj)
             % 4.30.24 Josh- Is headDirection aka angleBetweenVectors in plot HeadDirection the right measurement??
             pt=obj.PositionTable;
@@ -311,9 +311,48 @@ classdef RatCircularTrack < SleapHDF5Loader
             plot(time1, angleDeg1)
             ax=gca;
             ax.YGrid="on";
-
-
         end
+        
+        function obj = plotNosepokesAtCorrectRewardWell(obj)
+            headDirection = obj.getHeadDirection;
+
+
+            rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
+            rewardWellHigherAngle = 143;
+
+            framesAtCorrectRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle);
+
+            % getting low angular velocity for when animal stops at reward well
+            angularVelocity = ratontrack.getAngularVelocity();
+            %histogram(angularVelocity); angularVelocity cutoffs below made by looking
+            %at historgram of velocity
+            angularVelocityLow = (angularVelocity >= -3 & angularVelocity<=3);
+
+            % Find when animal's head is facing towards the reward well.
+            headDirection = ratontrack.getHeadDirection();
+            %historgram(headDirection); headDirection cutoffs below made by looking at histogram
+            %of head directions.
+            framesFacingAllWells = (vectorAngleDegrees >= 0 & vectorAngleDegrees <= 50);
+
+            % Combine framesAtCorrectRewardWell, angularVelocityLow, and
+            % framesFacingAllWells to get the frames when the animal was facing the
+            % correct reward well, aka drinking from the correct reward well.
+
+            % Does this filte out the incorrect nosepokes where the animal is running the the wrong direction?
+            % I think yes, but need to doublecheck 5.1.24
+            nosepokeAtCorrectRewardWell = angularVelocityLow & framesAtRewardWell & framesAnglesPointingToAllWells;
+
+
+            filteredNosepokeAtCorrectRewardWellFrames = find(nosepokeAtCorrectRewardWell == 1);
+            filteredNosepokeAtCorrectRewardWellMinutes = filteredNosepokeAtCorrectRewardWellFrames/v.FrameRate/60;
+            hold on
+            time1=pt1.Frame/fr/60;
+            plot(time1, filteredNosepokeAtCorrectRewardWellMinutes)
+            ax=gca;
+            ax.YGrid="on";
+        end
+       
+
         function obj = setCenter(obj,center)
             obj.Center=center;
         end

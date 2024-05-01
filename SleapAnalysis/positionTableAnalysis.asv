@@ -250,7 +250,7 @@ ylabel(sprintf('Normalized Velocity (delta angle / %d frames)', videoFrameRate *
 % Find Frames at Reward Well
 rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.                             
 rewardWellHigherAngle = 143;
-framesAtRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle); % Frames where the animal is at the thresholds defined as the reward well. 
+framesAtRewardWell = angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle; % Frames where the animal is at the thresholds defined as the reward well. 
 
 % Find Frames Where Head Angle is 90degrees??. 
 
@@ -258,14 +258,42 @@ framesAtRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < r
 
 % For the number of frames at the rewatd well
 % take the frame number of the ith frame
-changePtsFramesAtRewardWell = findchangepts(framesAtRewardWell,'Statistic', 'linear', 'MinThreshold', 10000); 
+changePtsFramesAtRewardWell = findchangepts(framesAtRewardWell,'Statistic', 'linear', 'MinThreshold', 10000);
+
 % Gives the index of the frames at which a change in signal finishes.
 %   For ex, if you have a vector 680; 681; 1337; 1338,
 %   This will give you 3 as the value, as the large change started at 681 or index
 %   2, but the change finished at 1337, or index 3.
 %   'Minsthreshold' Specify a minimum residual error improvement of 10k.
 
+for i = 1:length(changePtsFramesAtRewardWell)
+    framesLeavingRewardWell(i,1) = framesAtRewardWell(changePtsFramesAtRewardWell(i)-1);
+    %entryExitFrames(i,1) = framesLeavingRewardWell(i,1);
+end
 
+changePtsFramesAtRewardWell = [1; changePtsFramesAtRewardWell]; % Adding 1 to changePtsFramesAtRewardWell
 
+% calculate the frames where the animal enters the rewardWell area and
+% exits the reward well area.
+for i = 1:length(changePtsFramesAtRewardWell) - 1
+    rewardWellEntryExitFrames(i, 1) = framesAtRewardWell(changePtsFramesAtRewardWell(i));
+    rewardWellEntryExitFrames(i, 2) = framesLeavingRewardWell(i);
+end 
 
+rewardWellEntryExitSeconds = rewardWellEntryExit / v.FrameRate;
+rewardWellEntryExitMinutes = rewardWellEntryExitSeconds/ 60;
 
+%% 5.2.24 Nosepoke at correct reward well.
+rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.                             
+rewardWellHigherAngle = 143;
+
+framesAtCorrectRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle);
+
+% getting low angular velocity for when animal stops at reward well
+angularVelocity = getAngularVelocity();
+%histogram(angularVelocity) angularVeloci
+angularVelocityLow = (angularVelocity >= -3 & angularVelocity<=3);
+
+% Find when animal's head is facing towards the reward well.
+
+framesFacingAllWells = (vectorAngleDegrees >= 0 & vectorAngleDegrees <= 50);
