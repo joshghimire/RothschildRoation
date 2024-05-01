@@ -250,7 +250,7 @@ ylabel(sprintf('Normalized Velocity (delta angle / %d frames)', videoFrameRate *
 % Find Frames at Reward Well
 rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.                             
 rewardWellHigherAngle = 143;
-framesAtRewardWell = find(angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle); % Frames where the animal is at the thresholds defined as the reward well. 
+framesAtRewardWell = angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle; % Frames where the animal is at the thresholds defined as the reward well. 
 
 % Find Frames Where Head Angle is 90degrees??. 
 
