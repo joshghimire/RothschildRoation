@@ -334,7 +334,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             ax.YGrid="on";
         end
         
-        function obj = plotNosepokesAtCorrectRewardWell(obj)
+        function [obj, smoothedNosepokeAtCorrectRewardWell2] = getNosepokesAtCorrectRewardWell(obj)
             pt = obj.PositionTable;
             fr=25;
             pt1=pt(pt.Node==1,:);
@@ -372,6 +372,11 @@ classdef RatCircularTrack < SleapHDF5Loader
 
             %filteredNosepokeAtCorrectRewardWellFrames = find(nosepokeAtCorrectRewardWell == 1);
             %filteredNosepokeAtCorrectRewardWellMinutes = filteredNosepokeAtCorrectRewardWellFrames/25/60; %frame rate hardcoded for now
+            
+        end
+
+        function obj = plotNosepokesAtCorrectRewardWell(obj)
+            smoothedNosepokeAtCorrectRewardWell2 = obj.getNosepokesAtCorrectRewardWell;
             hold on
             time1=pt1.Frame/fr/60;
             plot(time1, smoothedNosepokeAtCorrectRewardWell2)
@@ -447,14 +452,14 @@ classdef RatCircularTrack < SleapHDF5Loader
             centerY = v.Height / 2;
             videoStartTimeInMinutes = input("Video start frame in whole minutes: ");
             startFrame = videoStartTimeInMinutes * 60;  % To use v.CurrentTime (which is timestamp in seconds from video start, need to convert)
-                
+            [~, smoothedNosepokeAtCorrectRewardWell2] = obj.getNosepokesAtCorrectRewardWell;    
             v.CurrentTime = startFrame;
+            
             
             figure
             i = v.CurrentTime * v.FrameRate;
             while hasFrame(v)
                 img = readFrame(v);
-                %angleRadians = insertMarker(img, ratontrack.Center);
                 imshow(img);
                 hold on
 
@@ -467,8 +472,22 @@ classdef RatCircularTrack < SleapHDF5Loader
                 yEnd = centerY - lineLength * sin(angle);
 
                 % Plot the line
+                         
                 plot([centerX, xEnd], [centerY, yEnd], 'b', 'LineWidth', 2);
-                scatter(xPositions1(i), yPositions1(i), 'r')
+                if smoothedNosepokeAtCorrectRewardWell2(i) == 0
+                    color = 'r';
+                else 
+                    color = 'y';
+                end
+                scatter(xPositions1(i), yPositions1(i), 40, color, 'filled')
+                
+                % dim = [.3 .68 .2 .2];
+                % if smoothedNosepokeAtCorrectRewardWell2(i) == 0
+                %     annotation('rectangle',dim,'Color','red')
+                % else
+                % annotation('rectangle',dim,'Color','green')
+                % end
+
                 %scatter(xPositions2(i), yPositions2(i), 'b')
                 %1plot(angleDegrees(i))
                 hold off
