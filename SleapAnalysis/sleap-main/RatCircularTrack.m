@@ -15,6 +15,9 @@ classdef RatCircularTrack < SleapHDF5Loader
         PositionTable
         Center
         Radius
+        CorrectNosepokes % probably don't have these as properties of the class.
+        AllNosepokes
+        RewardWellAngles
     end
 
     methods
@@ -342,8 +345,8 @@ classdef RatCircularTrack < SleapHDF5Loader
             angleDegrees = obj.getAngleDegrees;
 
 
-            rewardWellLowerAngle = 138;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
-            rewardWellHigherAngle = 143;
+            rewardWellLowerAngle = 130;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
+            rewardWellHigherAngle = 145;
 
             framesAtCorrectRewardWell = angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle;
 
@@ -374,6 +377,54 @@ classdef RatCircularTrack < SleapHDF5Loader
             %filteredNosepokeAtCorrectRewardWellMinutes = filteredNosepokeAtCorrectRewardWellFrames/25/60; %frame rate hardcoded for now
             
         end
+
+        function obj = getNosepokesAtAllWells(obj)
+            pt = obj.PositionTable;
+            fr=25;
+            pt1=pt(pt.Node==1,:);
+            headDirection = obj.getHeadDirection;
+            angleDegrees = obj.getAngleDegrees;
+
+
+            rewardWellLowerAngle = 130;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
+            rewardWellHigherAngle = 145;
+
+            %nonrewardWell1LowerAngle = ;
+            %nonrewardWell1HigherAngle = ;
+
+            %nonrewardWell2LowerAngle = ;
+            %nonrewardWell2HigherAngle = ;
+
+            framesAtCorrectRewardWell = angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle;
+
+            % getting low angular velocity for when animal stops at reward well
+            angularVelocity = obj.getAngularVelocity;
+            %histogram(angularVelocity); angularVelocity cutoffs below made by looking
+            %at historgram of velocity
+            angularVelocityLow = (angularVelocity >= -3 & angularVelocity<=3);
+
+            % Find when animal's head is facing towards the reward well.
+            headDirection = obj.getHeadDirection;
+            %historgram(headDirection); headDirection cutoffs below made by looking at histogram
+            %of head directions.
+            framesFacingAllWells = (headDirection >= 0 & headDirection <= 50);
+
+            % Combine framesAtCorrectRewardWell, angularVelocityLow, and
+            % framesFacingAllWells to get the frames when the animal was facing the
+            % correct reward well, aka drinking from the correct reward well.
+
+            % Does this filte out the incorrect nosepokes where the animal is running the the wrong direction?
+            % I think yes, but need to doublecheck 5.1.24
+            nosepokeAtCorrectRewardWell = framesAtCorrectRewardWell & angularVelocityLow & framesFacingAllWells;
+            %smoothedNosepokeAtCorrectRewardWell = smooth(nosepokeAtCorrectRewardWell);
+            smoothedNosepokeAtCorrectRewardWell1 = smoothdata(nosepokeAtCorrectRewardWell, 'movmean', 25*2);
+            smoothedNosepokeAtCorrectRewardWell2 = (smoothedNosepokeAtCorrectRewardWell1(:) >= 0.2) == 1;
+            
+            %filteredNosepokeAtCorrectRewardWellFrames = find(nosepokeAtCorrectRewardWell == 1);
+            %filteredNosepokeAtCorrectRewardWellMinutes = filteredNosepokeAtCorrectRewardWellFrames/25/60; %frame rate hardcoded for now
+            
+        end
+
 
         function obj = plotNosepokesAtCorrectRewardWell(obj)
             smoothedNosepokeAtCorrectRewardWell2 = obj.getNosepokesAtCorrectRewardWell;
@@ -458,28 +509,47 @@ classdef RatCircularTrack < SleapHDF5Loader
             
             figure
             i = v.CurrentTime * v.FrameRate;
+            
             while hasFrame(v)
                 img = readFrame(v);
                 imshow(img);
                 hold on
 
                 % Calculate the endpoint coordinates based on the angle
-                angle = angleRadians(i); % Replace angles(i) with your angle data
-                lineLength = 1000; % Define the length of the line
+                %angle = angleRadians(i); % Replace angles(i) with your angle data
+                % lineLength = 1000; % Define the length of the line
+
+
 
                 % Calculate endpoint coordinates
-                xEnd = centerX + lineLength * cos(angle);
-                yEnd = centerY - lineLength * sin(angle);
+                %xEnd = centerX + lineLength * cos(angle);
+                %yEnd = centerY - lineLength * sin(angle);
+                centerX = (500 * 2.5);
+                angle1 = 130 * (pi/180);
+                angle2 = 145 * (pi/180);
+                lineLength = 10000; % Define the length of the line
+                xEnd1 = centerX + lineLength * cos(angle1);
+                yEnd1 = centerY - lineLength * sin(angle1);
+
+                xEnd2 = centerX + lineLength * cos(angle2);
+                yEnd2 = centerY - lineLength * sin(angle2);
+
+
+
 
                 % Plot the line
                          
-                plot([centerX, xEnd], [centerY, yEnd], 'b', 'LineWidth', 2);
+                plot([centerX, xEnd1], [centerY, yEnd1], 'b', 'LineWidth', 2);
+                plot([centerX, xEnd2], [centerY, yEnd2], 'r', 'LineWidth', 2);
+                text(xPositions1(i), yPositions1(i), num2str(angleDegrees(i)), 'FontSize', 30, 'Color', 'r')
                 if smoothedNosepokeAtCorrectRewardWell2(i) == 0
                     color = 'r';
                 else 
                     color = 'y';
                 end
                 scatter(xPositions1(i), yPositions1(i), 40, color, 'filled')
+                yline(v.Height/2, '--r')
+                xline(centerX, '--r')
                 
                 % dim = [.3 .68 .2 .2];
                 % if smoothedNosepokeAtCorrectRewardWell2(i) == 0

@@ -4,7 +4,8 @@ for ifile=1:numel(files)
     filename1=files(ifile).name;
     filepath=fullfile(folder,filename1);
     ratontrack = RatCircularTrack(filepath);
-    ratontrack=ratontrack.setCenter([550 500]);
+    ratontrack=ratontrack.setCenter([500 500]);
+    ratontrack.RewardWellAngles = [130, 142];
    % ff=logistics.FigureFactory.instance(folder);ff.ext={'.png'};ff.resolution=600;
     figure(1);clf
     % ratontrack1=ratontrack.getHeadPosition
@@ -15,21 +16,21 @@ for ifile=1:numel(files)
     view(90,-60)
    % ff.save(strcat(filename1,'_raw.png'))
     figure(2);clf; tiledlayout("vertical","TileSpacing","none");t1=nexttile;
-    ratontrack.plotRawTime;
+    %ratontrack.plotRawTime;
     view(-30,0)
     t2=nexttile;
-    ratontrack.plotAngleTime;
+    %ratontrack.plotAngleTime;
     t3=nexttile;
     ratontrack.plotHeadDirectionColor;
-    t4=nexttile;
-    ratontrack.plotHeadDirection;
-    t5=nexttile;
-    ratontrack.plotAngularVelocity;
-    t6 = nexttile;
-    ratontrack.plotNosepokesAtCorrectRewardWell;
-    ylim([-0.5 1.5])
-    linkaxes([t1 t2 t3 t4 t5 t6],'x')
-    xlabel('time')
+    % t4=nexttile;
+    % ratontrack.plotHeadDirection;
+    % t5=nexttile;
+    % ratontrack.plotAngularVelocity;
+    % t6 = nexttile;
+    % ratontrack.plotNosepokesAtCorrectRewardWell;
+    % ylim([-0.5 1.5])
+    % linkaxes([t1 t2 t3 t4 t5 t6],'x')
+    % xlabel('time')
    % ff.save(strcat(filename1,'_angle+direction.png'))
    % xregion(rewardWellEntryExitMinutes(:, 1)', rewardWellEntryExitMinutes(:,2)'); % I think This is the right way to use X region with vectors. 
 end
