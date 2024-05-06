@@ -389,13 +389,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             
         end
 
-        function [] = getNosepokesAtAllWells(obj)
-        
-        end
-
         function obj = WRONG?IFORKEDUPSOMEWHEREHEREgetNosepokesAtAllWells(obj)
-            % IDK What I did here. TODO: See if any of this code is important to
-            % keep.
             pt = obj.PositionTable;
             fr=25;
             pt1=pt(pt.Node==1,:);
