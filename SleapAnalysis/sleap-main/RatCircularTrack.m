@@ -17,7 +17,7 @@ classdef RatCircularTrack < SleapHDF5Loader
         Radius
         CorrectNosepokes % probably don't have these as properties of the class.
         AllNosepokes
-        RewardWellAngles
+        WellAngles
     end
 
     methods
@@ -44,6 +44,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             obj.PointScores=[];
             obj.TrackOccupancy=[];
             obj.TrackingScores=[];
+            obj.WellAngles = []; % 0 degrees corresponds to (1, 0) direction on x-axis/cartesian plot. Goes to 180 (-1,0), then values become negative.
         end
 
         % Example method to calculate center of circular track
@@ -343,13 +344,23 @@ classdef RatCircularTrack < SleapHDF5Loader
             pt1=pt(pt.Node==1,:);
             headDirection = obj.getHeadDirection;
             angleDegrees = obj.getAngleDegrees;
-
-
-            rewardWellLowerAngle = 130;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
-            rewardWellHigherAngle = 145;
-
+            % Check reward well angles are pos, if they are get the angles to determine entry
+            % and exit of the reward well area.
+            if obj.WellAngles(1, :) > 0
+                rewardWellLowerAngle = 130;     % Based on examining video of around reward well.  
+                rewardWellHigherAngle = 145;
+            else
+                error("Reward well entry and exit angles (ratontrack.WellAngles(1,:)) must be positive! Logic for non-positive reward well angles hasn't been handled!")
+            end
             framesAtCorrectRewardWell = angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle;
-
+            % Get non-reward well (well 2 towards bottom left of cartesian plot) angles
+            well2EntryAngle = min(obj.WellAngles(2, :));
+            well2ExitAngle = max(obj.WellAngles(2, :));
+             % Get non-reward well (well 3 towards top right of cartesian plot) angles
+            well3EntryAngle = min(obj.WellAngles(3, :));
+            well3ExitAngle = max(obj.WellAngles(3, :));
+                
+            %%%%%%%%% Velocity Calculations %%%%%%%%%%%%%%
             % getting low angular velocity for when animal stops at reward well
             angularVelocity = obj.getAngularVelocity;
             %histogram(angularVelocity); angularVelocity cutoffs below made by looking
@@ -385,18 +396,10 @@ classdef RatCircularTrack < SleapHDF5Loader
             headDirection = obj.getHeadDirection;
             angleDegrees = obj.getAngleDegrees;
 
-
-            rewardWellLowerAngle = 130;     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
-            rewardWellHigherAngle = 145;
-
-            %nonrewardWell1LowerAngle = ;
-            %nonrewardWell1HigherAngle = ;
-
-            %nonrewardWell2LowerAngle = ;
-            %nonrewardWell2HigherAngle = ;
-
-            framesAtCorrectRewardWell = angleDegrees > rewardWellLowerAngle & angleDegrees < rewardWellHigherAngle;
-
+            % This assumes that the reward well is at a positive angle. 
+            rewardWellEntryAngle = min(ratontrack.WellAngles(1, :));     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
+            rewardWellExitAngle = max(ratontrack.WellAngles(1, :));
+            framesAtCorrectRewardWell = angleDegrees > rewardWellEntryAngle & angleDegrees < rewardWellExitAngle;
             % getting low angular velocity for when animal stops at reward well
             angularVelocity = obj.getAngularVelocity;
             %histogram(angularVelocity); angularVelocity cutoffs below made by looking
@@ -429,7 +432,9 @@ classdef RatCircularTrack < SleapHDF5Loader
         function obj = plotNosepokesAtCorrectRewardWell(obj)
             smoothedNosepokeAtCorrectRewardWell2 = obj.getNosepokesAtCorrectRewardWell;
             hold on
-            time1=pt1.Frame/fr/60;
+            pt = obj.PositionTable;
+            fr=25;
+            pt1=pt(pt.Node==1,:);
             plot(time1, smoothedNosepokeAtCorrectRewardWell2)
             ax=gca;
             ax.YGrid="on";
@@ -499,8 +504,8 @@ classdef RatCircularTrack < SleapHDF5Loader
             % xPositions2 = x2 * sleapDownSampling;
             % yPositions2 = y2 * sleapDownSampling;
 
-            centerX = v.Width / 2;
-            centerY = v.Height / 2;
+            centerX = obj.Center(1);
+            centerY = obj.Center(2);
             videoStartTimeInMinutes = input("Video start frame in whole minutes: ");
             startFrame = videoStartTimeInMinutes * 60;  % To use v.CurrentTime (which is timestamp in seconds from video start, need to convert)
             [~, smoothedNosepokeAtCorrectRewardWell2] = obj.getNosepokesAtCorrectRewardWell;    
@@ -525,17 +530,13 @@ classdef RatCircularTrack < SleapHDF5Loader
                 %xEnd = centerX + lineLength * cos(angle);
                 %yEnd = centerY - lineLength * sin(angle);
                 centerX = (500 * 2.5);
-                angle1 = 130 * (pi/180);
-                angle2 = 145 * (pi/180);
+                angle1 = obj.well2EntryAngle;
+                angle2 = ratontrack.well2ExitAngle;
                 lineLength = 10000; % Define the length of the line
                 xEnd1 = centerX + lineLength * cos(angle1);
                 yEnd1 = centerY - lineLength * sin(angle1);
-
                 xEnd2 = centerX + lineLength * cos(angle2);
                 yEnd2 = centerY - lineLength * sin(angle2);
-
-
-
 
                 % Plot the line
                          
@@ -550,16 +551,6 @@ classdef RatCircularTrack < SleapHDF5Loader
                 scatter(xPositions1(i), yPositions1(i), 40, color, 'filled')
                 yline(v.Height/2, '--r')
                 xline(centerX, '--r')
-                
-                % dim = [.3 .68 .2 .2];
-                % if smoothedNosepokeAtCorrectRewardWell2(i) == 0
-                %     annotation('rectangle',dim,'Color','red')
-                % else
-                % annotation('rectangle',dim,'Color','green')
-                % end
-
-                %scatter(xPositions2(i), yPositions2(i), 'b')
-                %1plot(angleDegrees(i))
                 hold off
                 i = i+1;
             end

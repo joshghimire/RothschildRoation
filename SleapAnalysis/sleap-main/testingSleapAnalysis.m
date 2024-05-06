@@ -5,34 +5,35 @@ for ifile=1:numel(files)
     filepath=fullfile(folder,filename1);
     ratontrack = RatCircularTrack(filepath);
     ratontrack=ratontrack.setCenter([500 500]);
-    ratontrack.RewardWellAngles = [130, 142];
-   % ff=logistics.FigureFactory.instance(folder);ff.ext={'.png'};ff.resolution=600;
+    ratontrack.WellAngles = [130 145; -120 -105; 15 30];  % The first two values are the entry and exit angles for the REWARD well, respectively.
+    % 0 degrees corresponds to (1, 0) direction on x-axis/cartesian plot. Goes to 180 (-1,0), then values become negative.
+    % ff=logistics.FigureFactory.instance(folder);ff.ext={'.png'};ff.resolution=600;
     figure(1);clf
     % ratontrack1=ratontrack.getHeadPosition
     ax=gca;
     ax.ZDir="reverse";
     ax.XDir="reverse";
-    %AG ratontrack.plotRawTime;
+    ratontrack.plotRawTime;
     view(90,-60)
-   % ff.save(strcat(filename1,'_raw.png'))
+    %ff.save(strcat(filename1,'_raw.png'))
     figure(2);clf; tiledlayout("vertical","TileSpacing","none");t1=nexttile;
     %ratontrack.plotRawTime;
     view(-30,0)
     t2=nexttile;
     %ratontrack.plotAngleTime;
     t3=nexttile;
-    ratontrack.plotHeadDirectionColor;
-    % t4=nexttile;
-    % ratontrack.plotHeadDirection;
-    % t5=nexttile;
-    % ratontrack.plotAngularVelocity;
-    % t6 = nexttile;
-    % ratontrack.plotNosepokesAtCorrectRewardWell;
-    % ylim([-0.5 1.5])
-    % linkaxes([t1 t2 t3 t4 t5 t6],'x')
-    % xlabel('time')
-   % ff.save(strcat(filename1,'_angle+direction.png'))
-   % xregion(rewardWellEntryExitMinutes(:, 1)', rewardWellEntryExitMinutes(:,2)'); % I think This is the right way to use X region with vectors. 
+    %ratontrack.plotHeadDirectionColor;
+    t4=nexttile;
+    %ratontrack.plotHeadDirection;
+    t5=nexttile;
+    ratontrack.plotAngularVelocity;
+    t6 = nexttile;
+    ratontrack.plotNosepokesAtCorrectRewardWell;
+    ylim([-0.5 1.5])
+    linkaxes([t1 t2 t3 t4 t5 t6],'x')
+    xlabel('time')
+    ff.save(strcat(filename1,'_angle+direction.png'))
+    xregion(rewardWellEntryExitMinutes(:, 1)', rewardWellEntryExitMinutes(:,2)'); % I think This is the right way to use X region with vectors. Isn't working atm with the tiled figures?
 end
 
 
