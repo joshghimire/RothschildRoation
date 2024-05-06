@@ -338,7 +338,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             ax.YGrid="on";
         end
         
-        function [obj, smoothedNosepokeAtCorrectRewardWell2] = getNosepokesAtCorrectRewardWell(obj)
+        function [smoothedNosepokeAtCorrectRewardWell2] = getNosepokesAtCorrectRewardWell(obj)
             pt = obj.PositionTable;
             fr=25;
             pt1=pt(pt.Node==1,:);
@@ -430,11 +430,12 @@ classdef RatCircularTrack < SleapHDF5Loader
 
 
         function obj = plotNosepokesAtCorrectRewardWell(obj)
-            smoothedNosepokeAtCorrectRewardWell2 = obj.getNosepokesAtCorrectRewardWell;
+            smoothedNosepokeAtCorrectRewardWell2 = getNosepokesAtCorrectRewardWell(obj);
             hold on
             pt = obj.PositionTable;
             fr=25;
             pt1=pt(pt.Node==1,:);
+            time1=pt1.Frame/fr/60;
             plot(time1, smoothedNosepokeAtCorrectRewardWell2)
             ax=gca;
             ax.YGrid="on";

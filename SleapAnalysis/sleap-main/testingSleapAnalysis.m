@@ -27,7 +27,7 @@ for ifile=1:numel(files)
     %ratontrack.plotHeadDirection;
     t5=nexttile;
     ratontrack.plotAngularVelocity;
-    t6 = nexttile;
+    t6=nexttile;
     ratontrack.plotNosepokesAtCorrectRewardWell;
     ylim([-0.5 1.5])
     linkaxes([t1 t2 t3 t4 t5 t6],'x')
