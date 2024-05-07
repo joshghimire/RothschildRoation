@@ -5,7 +5,7 @@ for ifile=1:numel(files)
     filepath=fullfile(folder,filename1);
     ratontrack = RatCircularTrack(filepath);
     ratontrack=ratontrack.setCenter([500 500]);
-    ratontrack.WellAngles = [130 145; -120 -105; 15 30];  % The first two values are the entry and exit angles for the REWARD well, respectively.
+    ratontrack.WellAngles = [130 145; -117 -102; 10 25];  % The first two values are the entry and exit angles for the REWARD well, respectively.
     % 0 degrees corresponds to (1, 0) direction on x-axis/cartesian plot. Goes to 180 (-1,0), then values become negative.
     % ff=logistics.FigureFactory.instance(folder);ff.ext={'.png'};ff.resolution=600;
     figure(1);clf
@@ -22,17 +22,17 @@ for ifile=1:numel(files)
     t2=nexttile;
     %ratontrack.plotAngleTime;
     t3=nexttile;
-    %ratontrack.plotHeadDirectionColor;
+    ratontrack.plotHeadDirectionColor;
     t4=nexttile;
-    %ratontrack.plotHeadDirection;
+    ratontrack.plotHeadDirection;
     t5=nexttile;
     ratontrack.plotAngularVelocity;
     t6=nexttile;
-    ratontrack.plotNosepokesAtCorrectRewardWell;
-    ylim([-0.5 1.5])
+    ratontrack.plotNosePokes;
     linkaxes([t1 t2 t3 t4 t5 t6],'x')
+    %ylim([-0.1 1.1])
     xlabel('time')
-    ff.save(strcat(filename1,'_angle+direction.png'))
+    %ff.save(strcat(filename1,'_angle+direction.png'))
     xregion(rewardWellEntryExitMinutes(:, 1)', rewardWellEntryExitMinutes(:,2)'); % I think This is the right way to use X region with vectors. Isn't working atm with the tiled figures?
 end
 

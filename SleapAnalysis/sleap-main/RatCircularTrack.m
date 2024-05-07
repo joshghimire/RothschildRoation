@@ -15,8 +15,6 @@ classdef RatCircularTrack < SleapHDF5Loader
         PositionTable
         Center
         Radius
-        CorrectNosepokes % probably don't have these as properties of the class.
-        AllNosepokes
         WellAngles
     end
 
@@ -335,7 +333,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             angleDeg1 = getAngularVelocity(obj);
             plot(time1, angleDeg1)
             ax=gca;
-            ax.YGrid="on";
+            ax.YGrid="off";
         end
         
         function [smoothedNosepokeAtCorrectRewardWell2] = getNosepokesAtCorrectRewardWell(obj)
@@ -389,7 +387,7 @@ classdef RatCircularTrack < SleapHDF5Loader
             
         end
 
-        function [nosepokesAtAnyWell, nosepokeAtCorrectRewardWell] = getNosepokesAtWells(obj)
+        function [smoothedNosepokesAtAnyWell, smoothedNosepokesAtCorrectRewardWell] = getNosepokesAtWells(obj)
             pt = obj.PositionTable;
             fr=25;
             pt1=pt(pt.Node==1,:);
@@ -423,64 +421,53 @@ classdef RatCircularTrack < SleapHDF5Loader
             %historgram(headDirection); headDirection cutoffs below made by looking at histogram
             %of head directions.
             framesFacingAllWells = (headDirection >= 0 & headDirection <= 50);
+    
+            %%%%%% Change PTS to catch animal running wrong way
+     
+            changePtsFramesAtAnyWell = findchangepts(double(framesAtAnyWells),'Statistic', 'linear', 'MinThreshold', 10000);
+
 
             %%%% nosepokesAtAnyWell && nosePokesAtCorrectRewardWell
             nosepokesAtAnyWell = framesAtAnyWells & angularVelocityLow & framesFacingAllWells;
-            nosepokeAtCorrectRewardWell = framesAtCorrectRewardWell & angularVelocityLow & framesFacingAllWells;
+            nosepokesAtCorrectRewardWell = framesAtCorrectRewardWell & angularVelocityLow & framesFacingAllWells;
+
+            smoothedNosepokesAtAnyWell = smoothdata(nosepokesAtAnyWell, 'movmean', 25*2);
+            smoothedNosepokesAtAnyWell = (smoothedNosepokesAtAnyWell(:) >= 0.2) == 1;
+            
+            smoothedNosepokesAtCorrectRewardWell = smoothdata(nosepokesAtCorrectRewardWell, 'movmean', 25*2);
+            smoothedNosepokesAtCorrectRewardWell = (smoothedNosepokesAtCorrectRewardWell(:) >= 0.2) == 1;
         end
 
-        function obj = WRONG_IFORKEDUPSOMEWHEREHEREgetNosepokesAtAllWells(obj)
-            % IDK What I did here. TODO: See if any of this code is important to
-            % keep.
-            pt = obj.PositionTable;
-            fr=25;
-            pt1=pt(pt.Node==1,:);
-            headDirection = obj.getHeadDirection;
-            angleDegrees = obj.getAngleDegrees;
+        % function obj = plotNosepokesAtCorrectRewardWell(obj)
+        %     smoothedNosepokeAtCorrectRewardWell2 = getNosepokesAtCorrectRewardWell(obj);
+        %     hold on
+        %     pt = obj.PositionTable;
+        %     fr=25;
+        %     pt1=pt(pt.Node==1,:);
+        %     time1=pt1.Frame/fr/60;
+        %     plot(time1, smoothedNosepokeAtCorrectRewardWell2)
+        %     ax=gca;
+        %     ax.YGrid="on";
+        % end
 
-            % This assumes that the reward well is at a positive angle. 
-            rewardWellEntryAngle = min(ratontrack.WellAngles(1, :));     % Based on eyeballing (plot(angleDegrees)), 138deg to 143deg for angleDeg might be a good first estimate of where the animal is at the correct reward well.
-            rewardWellExitAngle = max(ratontrack.WellAngles(1, :));
-            framesAtCorrectRewardWell = angleDegrees > rewardWellEntryAngle & angleDegrees < rewardWellExitAngle;
-            % getting low angular velocity for when animal stops at reward well
-            angularVelocity = obj.getAngularVelocity;
-            %histogram(angularVelocity); angularVelocity cutoffs below made by looking
-            %at historgram of velocity
-            angularVelocityLow = (angularVelocity >= -3 & angularVelocity<=3);
-
-            % Find when animal's head is facing towards the reward well.
-            headDirection = obj.getHeadDirection;
-            %historgram(headDirection); headDirection cutoffs below made by looking at histogram
-            %of head directions.
-            framesFacingAllWells = (headDirection >= 0 & headDirection <= 50);
-
-            % Combine framesAtCorrectRewardWell, angularVelocityLow, and
-            % framesFacingAllWells to get the frames when the animal was facing the
-            % correct reward well, aka drinking from the correct reward well.
-
-            % Does this filte out the incorrect nosepokes where the animal is running the the wrong direction?
-            % I think yes, but need to doublecheck 5.1.24
-            nosepokeAtCorrectRewardWell = framesAtCorrectRewardWell & angularVelocityLow & framesFacingAllWells;
-            %smoothedNosepokeAtCorrectRewardWell = smooth(nosepokeAtCorrectRewardWell);
-            smoothedNosepokeAtCorrectRewardWell1 = smoothdata(nosepokeAtCorrectRewardWell, 'movmean', 25*2);
-            smoothedNosepokeAtCorrectRewardWell2 = (smoothedNosepokeAtCorrectRewardWell1(:) >= 0.2) == 1;
-            
-            %filteredNosepokeAtCorrectRewardWellFrames = find(nosepokeAtCorrectRewardWell == 1);
-            %filteredNosepokeAtCorrectRewardWellMinutes = filteredNosepokeAtCorrectRewardWellFrames/25/60; %frame rate hardcoded for now
-            
-        end
-
-
-        function obj = plotNosepokesAtCorrectRewardWell(obj)
-            smoothedNosepokeAtCorrectRewardWell2 = getNosepokesAtCorrectRewardWell(obj);
-            hold on
+        function obj = plotNosePokes(obj)
+            compareAllVsCorrectNosepokes = 1;
+            plotAnyWellNosepokes = 1; % plot nosepokes at any of the wells in the recording
+            plotCorrectRewardWellNosepokes = 0; % only plot the correct nosepokes in the reward well
+            [smoothedNosepokesAtAnyWell, smoothedNosepokesAtCorrectRewardWell] = obj.getNosepokesAtWells;
             pt = obj.PositionTable;
             fr=25;
             pt1=pt(pt.Node==1,:);
             time1=pt1.Frame/fr/60;
-            plot(time1, smoothedNosepokeAtCorrectRewardWell2)
+            plot(time1, smoothedNosepokesAtCorrectRewardWell, 'b')
+            hold on;
+            if compareAllVsCorrectNosepokes
+                plot(time1, smoothedNosepokesAtAnyWell + 1.1, 'r')
+                legend('Smoothed NP At Correct Reward Well', 'Smoothed NP At Any Well')
+            else
+            end
             ax=gca;
-            ax.YGrid="on";
+            ax.YGrid="off";
         end
        
 
@@ -509,7 +496,7 @@ classdef RatCircularTrack < SleapHDF5Loader
         function obj = viewShoddyVideo(obj)
 
             %% Tryin to plot theta angle as well
-            cd R:\DataBackup\RothschildLab\utku\Josh
+            cd R:\DataBackup\RothschildLab\utku\Josh %TODO: rework this and use obj 
             load('PositionTable.mat')
             pt = ratontrack.PositionTable;
             nodes=unique(pt.Node);
@@ -547,17 +534,26 @@ classdef RatCircularTrack < SleapHDF5Loader
             % xPositions2 = x2 * sleapDownSampling;
             % yPositions2 = y2 * sleapDownSampling;
 
-            centerX = obj.Center(1);
-            centerY = obj.Center(2);
+            centerX = obj.Center(1) * sleapDownSampling;
+            centerY = obj.Center(2) * sleapDownSampling;
             videoStartTimeInMinutes = input("Video start frame in whole minutes: ");
             startFrame = videoStartTimeInMinutes * 60;  % To use v.CurrentTime (which is timestamp in seconds from video start, need to convert)
-            [~, smoothedNosepokeAtCorrectRewardWell2] = obj.getNosepokesAtCorrectRewardWell;    
+            %smoothedNosepokeAtCorrectRewardWell2 = obj.getNosepokesAtCorrectRewardWell;    
+            [smoothedNosepokesAtAnyWell, ~] = obj.getNosepokesAtWells;
             v.CurrentTime = startFrame;
             
             
             figure
             i = v.CurrentTime * v.FrameRate;
-            
+            angle1 = deg2rad(obj.WellAngles(3,1));
+            angle2 = deg2rad(obj.WellAngles(3,2));
+            lineLength = 10000; % Define the length of the line
+            xEnd1 = centerX + lineLength * cos(angle1);
+            yEnd1 = centerY - lineLength * sin(angle1);
+            xEnd2 = centerX + lineLength * cos(angle2);
+            yEnd2 = centerY - lineLength * sin(angle2);
+
+
             while hasFrame(v)
                 img = readFrame(v);
                 imshow(img);
@@ -572,21 +568,16 @@ classdef RatCircularTrack < SleapHDF5Loader
                 % Calculate endpoint coordinates
                 %xEnd = centerX + lineLength * cos(angle);
                 %yEnd = centerY - lineLength * sin(angle);
-                centerX = (500 * 2.5);
-                angle1 = obj.well2EntryAngle;
-                angle2 = ratontrack.well2ExitAngle;
-                lineLength = 10000; % Define the length of the line
-                xEnd1 = centerX + lineLength * cos(angle1);
-                yEnd1 = centerY - lineLength * sin(angle1);
-                xEnd2 = centerX + lineLength * cos(angle2);
-                yEnd2 = centerY - lineLength * sin(angle2);
+                
+               
 
                 % Plot the line
                          
                 plot([centerX, xEnd1], [centerY, yEnd1], 'b', 'LineWidth', 2);
                 plot([centerX, xEnd2], [centerY, yEnd2], 'r', 'LineWidth', 2);
                 text(xPositions1(i), yPositions1(i), num2str(angleDegrees(i)), 'FontSize', 30, 'Color', 'r')
-                if smoothedNosepokeAtCorrectRewardWell2(i) == 0
+                %if smoothedNosepokeAtCorrectRewardWell2(i) == 0
+                if smoothedNosepokesAtAnyWell(i) == 0
                     color = 'r';
                 else 
                     color = 'y';
