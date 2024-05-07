@@ -389,10 +389,11 @@ classdef RatCircularTrack < SleapHDF5Loader
             
         end
 
-        function [] = getNosepokesAtWells(obj)
+        function [nosepokesAtAnyWell, nosepokeAtCorrectRewardWell] = getNosepokesAtWells(obj)
             pt = obj.PositionTable;
             fr=25;
             pt1=pt(pt.Node==1,:);
+            time1=pt1.Frame/fr/60;
             headDirection = obj.getHeadDirection;
             angleDegrees = obj.getAngleDegrees;
             angularVelocity = obj.getAngularVelocity;
@@ -424,9 +425,8 @@ classdef RatCircularTrack < SleapHDF5Loader
             framesFacingAllWells = (headDirection >= 0 & headDirection <= 50);
 
             %%%% nosepokesAtAnyWell && nosePokesAtCorrectRewardWell
-            nosepokeAtAnyWell = framesAtAnyWells & angularVelocityLow & framesFacingAllWells;
+            nosepokesAtAnyWell = framesAtAnyWells & angularVelocityLow & framesFacingAllWells;
             nosepokeAtCorrectRewardWell = framesAtCorrectRewardWell & angularVelocityLow & framesFacingAllWells;
-            x = 1; %temp
         end
 
         function obj = WRONG_IFORKEDUPSOMEWHEREHEREgetNosepokesAtAllWells(obj)
