@@ -389,11 +389,47 @@ classdef RatCircularTrack < SleapHDF5Loader
             
         end
 
-        function [] = getNosepokesAtAllWells(obj)
-        
+        function [] = getNosepokesAtWells(obj)
+            pt = obj.PositionTable;
+            fr=25;
+            pt1=pt(pt.Node==1,:);
+            headDirection = obj.getHeadDirection;
+            angleDegrees = obj.getAngleDegrees;
+            angularVelocity = obj.getAngularVelocity;
+            % Check if reward well angles are pos, if they are get the angles to determine entry
+            % and exit of the reward well area.
+            if obj.WellAngles(1, :) > 0
+                rewardWellEntryAngle = 130;     % Based on examining video of around reward well.  
+                rewardWellExitAngle = 145;
+            else
+                error("Reward well entry and exit angles (ratontrack.WellAngles(1,:)) must be positive! Logic for non-positive reward well angles hasn't been handled!")
+            end
+            % Get non-reward well (well 2 towards bottom left of cartesian plot) angles
+            well2EntryAngle = min(obj.WellAngles(2, :));
+            well2ExitAngle = max(obj.WellAngles(2, :));
+            % Get non-reward well (well 3 towards top right of cartesian plot) angles
+            well3EntryAngle = min(obj.WellAngles(3, :));
+            well3ExitAngle = max(obj.WellAngles(3, :));
+            % Finding frames at all three reward wells:
+            framesAtAnyWells = (angleDegrees > rewardWellEntryAngle & angleDegrees < rewardWellExitAngle) | (angleDegrees > well2EntryAngle & angleDegrees < well2ExitAngle) | (angleDegrees > well2EntryAngle & angleDegrees < well2ExitAngle); % DEAR GOD Forgive this monstrosity of a logical statement.
+            % Finding frames at only correct reward well:
+            framesAtCorrectRewardWell = angleDegrees > rewardWellEntryAngle & angleDegrees < rewardWellExitAngle;
+            %Velocity Calculation:
+            %histogram(angularVelocity); angularVelocity cutoffs below made by looking
+            %at historgram of velocity
+            angularVelocityLow = (angularVelocity >= -3 & angularVelocity<=3);
+            %Correct Head Direction At Reward Well:
+            %historgram(headDirection); headDirection cutoffs below made by looking at histogram
+            %of head directions.
+            framesFacingAllWells = (headDirection >= 0 & headDirection <= 50);
+
+            %%%% nosepokesAtAnyWell && nosePokesAtCorrectRewardWell
+            nosepokeAtAnyWell = framesAtAnyWells & angularVelocityLow & framesFacingAllWells;
+            nosepokeAtCorrectRewardWell = framesAtCorrectRewardWell & angularVelocityLow & framesFacingAllWells;
+            x = 1; %temp
         end
 
-        function obj = WRONG?IFORKEDUPSOMEWHEREHEREgetNosepokesAtAllWells(obj)
+        function obj = WRONG_IFORKEDUPSOMEWHEREHEREgetNosepokesAtAllWells(obj)
             % IDK What I did here. TODO: See if any of this code is important to
             % keep.
             pt = obj.PositionTable;
